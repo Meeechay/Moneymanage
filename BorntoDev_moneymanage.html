@@ -1,0 +1,110 @@
+<head>
+    <title>โปรแกรมคำนวณรายรับ-รายจ่าย</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; padding: 20px; background-color: #f3f4f6; }
+        .container { max-width: 60px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        h3 { margin-top: 0; color: #333; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 20%; padding: 8px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc; box-sizing: border-box; }
+        .button-group { margin-top: 10px; }
+        .income-btn { background-color: #4caf50; } /* สีสำหรับปุ่มบันทึกรายรับ */
+        .expense-btn { background-color: #f44336; } /* สีสำหรับปุ่มบันทึกรายจ่าย */
+        .summary-btn { background-color: #2196f3; } /* สีสำหรับปุ่มสรุปผล */
+        button { padding: 10px 20px; border: none; border-radius: 4px; color: #fff; cursor: pointer; transition: background-color 0.3s; }
+        button:hover { background-color: #f3df29f1; }
+        .data-container, .summary { margin-top: 20px; background-color: #f0f0f0; padding: 10px; border-radius: 4px; }
+        .summary h2, .summary h3 { margin-top: 0; }
+        .summary ul { list-style-type: none; padding: 0; margin: 0; }
+        .summary ul li { margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <h3>โปรแกรมคำนวณรายรับ-รายจ่าย</h3>
+    <form id="dataForm">
+        <label for="date">วันที่:</label>
+        <input type="date" id="date" required><br>
+        <label for="type">หมวดหมู่:</label>
+        <select id="type" required>
+            <option value="ค่าอาหาร">ค่าอาหาร</option>
+            <option value="ค่าเดินทาง">ค่าเดินทาง</option>
+            <option value="เงินเดือน">เงินเดือน</option>
+            <option value="อื่นๆ">อื่นๆ</option>
+        </select><br>
+        <label for="amount">จำนวนเงิน:</label>
+        <input type="number" id="amount" required><br>
+        <label for="note">โน๊ต:</label>
+        <input type="text" id="note" required><br>
+        <button type="button" class="income-btn" onclick="addData('income')">บันทึกรายรับ</button>
+        <button type="button" class="expense-btn" onclick="addData('expense')">บันทึกรายจ่าย</button>
+        <button type="button" class="summary-btn" onclick="summarizeData()">สรุปผล</button>
+
+    </form>
+    
+    <div id="dataDisplay"></div>
+    <div id="summaryDisplay" class="summary"></div>
+
+    <script>
+        let data = { income: [], expense: [] };
+
+        function setTodayDate() {
+            document.getElementById("date").value = new Date().toISOString().substr(0, 10);
+        }
+
+        function addData(type) {
+            let date = document.getElementById("date").value;
+            let category = document.getElementById("type").value;
+            let amount = parseFloat(document.getElementById("amount").value);
+            let note = document.getElementById("note").value;
+
+            if (isNaN(amount) || amount <= 0) {
+                alert("กรุณาใส่จำนวนเงินที่ถูกต้อง");
+                return;
+            }
+
+            data[type].push({ date, category, amount, note });
+            displayData(type, date, category, amount, note);
+
+            setTodayDate();
+            document.getElementById("type").value = "ค่าอาหาร";
+            document.getElementById("amount").value = "";
+            document.getElementById("note").value = "";
+        }
+
+        function displayData(type, date, category, amount, note) {
+            let dataDisplay = document.getElementById("dataDisplay");
+            dataDisplay.innerHTML += `<p><strong>${type === "income" ? "รายรับ" : "รายจ่าย"}:</strong> วันที่ ${date} - ${category} (${amount} บาท) - ${note}</p>`;
+        }
+
+        function summarizeData() {
+            let summary = "<h2>สรุปผลรวมรายรับและรายจ่าย</h2>";
+            let totalIncome = 0, totalExpense = 0, incomeBreakdown = {}, expenseBreakdown = {};
+
+            data.income.forEach(item => {
+                totalIncome += item.amount;
+                incomeBreakdown[item.category] = (incomeBreakdown[item.category] || 0) + item.amount;
+            });
+
+            data.expense.forEach(item => {
+                totalExpense += item.amount;
+                expenseBreakdown[item.category] = (expenseBreakdown[item.category] || 0) + item.amount;
+            });
+
+            summary += generateSummarySection("รายรับ", incomeBreakdown, totalIncome);
+            summary += generateSummarySection("รายจ่าย", expenseBreakdown, totalExpense);
+            summary += `<h3>ยอดคงเหลือ: ${(totalIncome - totalExpense).toFixed(2)} บาท</h3>`;
+
+            document.getElementById("summaryDisplay").innerHTML = summary;
+        }
+
+        function generateSummarySection(title, breakdown, total) {
+            let section = `<h3>${title}</h3><ul>`;
+            for (let category in breakdown) {
+                section += `<li>${category}: ${breakdown[category].toFixed(2)} บาท</li>`;
+            }
+            section += `</ul><p>ผลรวม${title}: ${total.toFixed(2)} บาท</p>`;
+            return section;
+        }
+
+        window.onload = setTodayDate;
+    </script>
+</body>
